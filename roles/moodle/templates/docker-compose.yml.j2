@@ -1,0 +1,91 @@
+version: '{{ version_docker_compose }}'
+services:
+
+  #PHP Service
+  {{ php_name_service }}:
+    build:
+      context: .
+      dockerfile: {{ php_docker_file }}
+      args:
+        - PHPUSER=${PHPUSER:{{ php_user }}}
+        - PHPGROUP=${PHPGROUP:{{ php_group }}}
+    container_name: {{ php_container_name }}
+    image: {{ php_image_name }}
+    depends_on:
+      - {{ dbmysql_name_service }}
+    volumes:
+       - ./src/public_html:/var/www/html:delegated
+       - ./src/moodledata:/var/www/moodledata:delegated
+       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+       - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+       - ./logs:/var/log/jobschedule
+    networks:
+      - {{ network_name }}
+
+  #Nginx Service
+  {{ nginx_name_service }}:
+    build:
+      context: .
+      dockerfile: {{ nginx_docker_file }}
+      args:
+        - NGINXUSER=${NGINXUSER:{{ nginx_user }}}
+        - NGINXGROUP=${NGINXGROUP:{{ nginx_group }}}
+    container_name: {{ nginx_container_name }}
+    image: {{ nginx_image_name }}
+    restart: unless-stopped
+    ports:
+      - "{{ nginx_http_port_host }}:{{ nginx_http_port_container }}"
+      - "{{ nginx_https_port_host }}:{{ nginx_https_port_container }}"
+      #- "8000:80"
+    depends_on:
+      - {{ php_name_service }}
+      - {{ dbmysql_name_service }}
+    volumes:
+      - ./src/public_html:/var/www/html:delegated
+      - ./src/moodledata:/var/www/moodledata:delegated
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./logs:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - {{ network_name }}
+
+  #Mysql 5.7 Service
+  {{ dbmysql_name_service }}:
+    image: {{ dbmysql_image_name }}
+    container_name: {{ dbmysql_container_name }}
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: '{{ dbmysql_database }}'
+      MYSQL_ROOT_PASSWORD: '{{ dbmysql_passwd_root }}'
+      MYSQL_PASSWORD: '{{ dbmysql_passwd }}'
+      MYSQL_USER: '{{ dbmysql_user }}'
+    volumes:
+      - ./dbmysql/data:/var/lib/mysql
+      - ./dbmysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./dbmysql/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "{{ dbmysql_port_host }}:{{ dbmysql_port_container }}"
+    networks:
+      - {{ network_name }}
+
+  {{ phpmyadmin_name_service }}:
+    image: {{ phpmyadmin_image_name }}
+    container_name: {{ phpmyadmin_container_name }}
+    ports:
+      - "{{ phpmyadmin_http_port_host }}:{{ phpmyadmin_http_port_container }}"
+    environment:
+      PMA_HOST: '{{ dbmysql_name_service }}'
+      MYSQL_USER: {{ phpmyadmin_user }}
+      MYSQL_PASSWORD: {{ phpmyadmin_passwd }}
+      MYSQL_ROOT_PASSWORD: {{ phpmyadmin_passwd_root }}
+    networks:
+        - {{ network_name }}
+
+#Docker Networks
+networks:
+  {{ network_name }}:
+    driver: {{ network_driver }}
+
+

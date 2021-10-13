@@ -1,0 +1,128 @@
+---
+
+dir_in_working:
+  - dbmysql
+  - docker
+  - logs
+  - scripts
+  - src
+
+
+### MYSQL
+
+join_buffer_size: 128M
+max_allowed_packet: 268435456
+open_files_limit: 500000
+max_connections: 500
+
+### NGINX
+
+user_nginx: nginx
+http_port_nginx: 80
+folder_root_nginx_conf: '/usr/share/nginx/html'
+fastcgi_pass_nginx_conf: 127.0.0.1
+fastcgi_pass_port_nginx_conf: 9000
+
+http_port_hocmai_conf: 80
+server_name_hocmai_conf: 'dev.omo.hocmai.com'
+folder_root_hocmai_conf: '/var/www/html'
+error_logs_hocmai_conf: '/var/log/nginx/hocmai_error.log'
+access_logs_hocmai_conf: '/var/log/nginx/hocmai_access.log'
+fastcgi_pass_hocmai_conf: nginx-hm
+fastcgi_pass_port_hocmai_conf: 9000
+
+http_port_hocmai_redirect_conf: 80
+server_name_hocmai_redirect_conf: 'school.ican.vn'
+
+https_port_hocmai_ssl_conf: 443
+server_name_hocmai_ssl_conf: 'dev.omo.hocmai.com'
+folder_root_hocmai_ssl_conf: '/var/www/html'
+ssl_certificate_hocmai_ssl_conf: '/etc/letsencrypt/live/school.ican.vn/fullchain.pem'
+ssl_certificate_key_hocmai_ssl_conf: '/etc/letsencrypt/live/school.ican.vn/privkey.pem'
+error_logs_hocmai_ssl_conf: '/var/log/nginx/hocmai_error.log'
+access_logs_hocmai_ssl_conf: '/var/log/nginx/hocmai_access.log'
+fastcgi_pass_hocmai_ssl_conf: php
+fastcgi_pass_port_hocmai_ssl_conf: 9000
+
+### PHP
+
+upload_max_filesize: 800M
+post_max_size: 800M
+session_cookie_lifetime: 2000000
+session_gc_maxlifetime: 200000
+session_cache_expire: 200000
+
+
+main_dir: OMO_DongDa
+
+### DOCKER
+
+nginx_based_from: 'nginx:stable-alpine'
+nginx_label_maintainer: 'Bé tập code <minhpn@hocmai.vn>'
+nginx_user_in_docker_file: 'www-data'
+nginx_web_root: '/var/www/html'
+
+php_based_from: 'php:7.4-fpm-alpine'
+php_label_maintainer: 'Bé tập code <minhpn@hocmai.vn>'
+php_user_in_docker_file: 'www-data'
+php_group_in_docker_file: 'www-data'
+php_web_root: '/var/www/html'
+php_workdir: '/var/www/html'
+
+php_install:
+  - oniguruma-dev
+  - icu-dev
+  - $PHPIZE_DEPS
+  - freetype-dev
+  - git
+  - libjpeg-turbo-dev
+  - libpng-dev
+  - libxml2-dev
+  - libzip-dev
+  - openssh-client
+  - php7-json
+  - php7-openssl
+  - php7-pdo
+  - php7-pdo_mysql
+  - php7-session
+  - php7-simplexml
+  - php7-tokenizer
+  - php7-xml
+  - imagemagick
+  - imagemagick-libs
+  - imagemagick-dev
+  - php7-imagick
+  - php7-pcntl
+  - php7-zip
+  - icu-dev
+  - tzdata
+
+php_ext_install:
+  - pdo
+  - pdo_mysql
+  - pcntl
+  - mysqli
+  - mbstring
+  - iconv
+  - soap
+  - sockets
+  - exif
+  - bcmath
+  - pcntl
+  - gd
+  - zip
+
+php_ext_install_nproc:
+  - intl
+  - simplexml
+  - xml
+  - xmlrpc
+
+php_ext_enable:
+  - mysqli
+  - mbstring
+  - intl
+  - simplexml
+  - xml
+  - xmlrpc
+  

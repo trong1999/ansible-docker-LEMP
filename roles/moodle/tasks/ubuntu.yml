@@ -1,0 +1,113 @@
+---
+#- name: Install aptitude using apt
+#  apt:
+#    name: aptitude
+#    state: latest
+#    update_cache: yes
+#    force_apt_get: yes
+#
+#- name: Install required system packages
+#  apt:
+#    name: "{{ required_packages_ubuntu }}"
+#    state: latest
+#    update_cache: yes
+#
+#- name: Add Docker GPG apt key
+#  apt_key:
+#    url: "{{ docker_apt_key }}"
+#    state: present
+#
+#- name: Add docker repository
+#  apt_repository:
+#    repo: "{{ docker_repo_ubuntu }}"
+#    state: present
+#
+#- name: Update apt and install docker-ce and install docker-compose
+#  apt:
+#    update_cache: yes
+#    name: "{{ docker_name_install }}"
+#    state: latest
+#  notify: Restart docker
+#
+#- name: Install Docker and docker-compose module for python
+#  pip:
+#    name: "{{ docker_name_pip }}"
+
+- name: Create directory "{{ main_dir }}"
+  file:
+     path: $HOME/{{ main_dir }}
+     state: directory
+     mode: '0755'
+     owner: root
+     group: root
+
+- name: Create directory "{{ main_dir }}/{{ item }}"
+  file:
+     path: '$HOME/{{ main_dir }}/{{ item }}'
+     state: directory
+     recurse: yes
+     mode: '0755'
+     owner: root
+     group: root
+  loop:
+    - dbmysql
+    - docker
+    - docker/nginx
+    - docker/php
+    - docker/nginx/conf.d
+    - logs
+    - scripts
+    - src
+
+- name: Copy resource in files dir
+  copy:
+    src: "{{ item }}/"
+    dest: '$HOME/{{ main_dir }}/{{ item }}'
+    remote_src: false
+    force: yes
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - dbmysql
+    - src
+      #    - { src: 'src', dest: 'src' }
+
+- name: Copy resource '{{ item }}' in templates dir
+  template:
+    src: '{{ item.src }}'
+    dest: '$HOME/{{ main_dir }}/{{ item.dest }}'
+    owner: root
+    group: root
+  loop:
+   - { src: 'dbmysql/my.cnf.j2', dest: 'dbmysql/my.cnf' }
+   - { src: 'docker/nginx.dockerfile.j2', dest: 'docker/nginx.dockerfile' }
+   - { src: 'docker/php.dockerfile.j2', dest: 'docker/php.dockerfile' }
+   - { src: 'docker/nginx/nginx.conf.j2', dest: 'docker/nginx/nginx.conf' }
+   - { src: 'docker/nginx/conf.d/hocmai.conf.j2', dest: 'docker/nginx/conf.d/hocmai.conf' }
+   - { src: 'docker/nginx/conf.d/hocmai_redirect.conf.j2', dest: 'docker/nginx/conf.d/hocmai_redirect.conf' }
+   - { src: 'docker/nginx/conf.d/hocmai_ssl.conf.j2', dest: 'docker/nginx/conf.d/hocmai_ssl.conf' }
+   - { src: 'docker/php/local.ini.j2', dest: 'docker/php/local.ini' }
+   - { src: 'docker/php/php.ini.j2', dest: 'docker/php/php.ini' }
+   - { src: 'docker/php/www.conf.j2', dest: 'docker/php/www.conf' }
+   - { src: 'scripts/db_backup.sh.j2', dest: 'scripts/db_backup.sh' }
+   - { src: 'scripts/hocmai-crontab.j2', dest: 'scripts/hocmai-crontab' }
+   - { src: 'scripts/worker.conf.j2', dest: 'scripts/worker.conf' }
+   - { src: 'scripts/entrypoint.sh.j2', dest: 'scripts/entrypoint.sh' }
+  tags:
+    - cpy
+
+- name: Copy docker-compose file
+  template:
+    src: 'docker-compose.yml.j2'
+    dest: '$HOME/{{ main_dir }}/docker-compose.yml'
+  tags:
+    - docker-compose
+
+- name: Deploy docker-compose
+  become: True
+  shell: 
+    cmd: 'docker-compose up -d'
+    chdir: '$HOME/{{ main_dir }}'
+  tags:
+    - run-compose

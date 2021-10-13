@@ -1,0 +1,5 @@
+server {
+    listen {{ http_port_hocmai_redirect_conf }};
+    server_name {{ server_name_hocmai_redirect_conf }};
+    return 301 https://{{ server_name_hocmai_redirect_conf }}$request_uri;
+}

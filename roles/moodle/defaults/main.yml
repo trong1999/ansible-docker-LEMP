@@ -1,0 +1,48 @@
+---
+
+version_docker_compose: 3
+
+### MYSQL
+
+join_buffer_size: 128M
+max_allowed_packet: 268435456
+open_files_limit: 500000
+max_connections: 500
+
+### NGINX
+
+user_nginx: nginx
+http_port_nginx: 80
+folder_root_nginx_conf: '/usr/share/nginx/html'
+fastcgi_pass_nginx_conf: 127.0.0.1
+fastcgi_pass_port_nginx_conf: 9000
+
+http_port_hocmai_conf: 80
+server_name_hocmai_conf: 'dev.omo.hocmai.com'
+folder_root_hocmai_conf: '/var/www/html'
+error_logs_hocmai_conf: '/var/log/nginx/hocmai_error.log'
+access_logs_hocmai_conf: '/var/log/nginx/hocmai_access.log'
+fastcgi_pass_hocmai_conf: php
+fastcgi_pass_port_hocmai_conf: 9000
+
+http_port_hocmai_redirect_conf: 80
+server_name_hocmai_redirect_conf: 'school.ican.vn'
+
+https_port_hocmai_ssl_conf: 443
+server_name_hocmai_ssl_conf: 'dev.omo.hocmai.com'
+folder_root_hocmai_ssl_conf: '/var/www/html'
+ssl_certificate_hocmai_ssl_conf: '/etc/letsencrypt/live/school.ican.vn/fullchain.pem'
+ssl_certificate_key_hocmai_ssl_conf: '/etc/letsencrypt/live/school.ican.vn/privkey.pem'
+error_logs_hocmai_ssl_conf: '/var/log/nginx/hocmai_error.log'
+access_logs_hocmai_ssl_conf: '/var/log/nginx/hocmai_access.log'
+fastcgi_pass_hocmai_ssl_conf: php
+fastcgi_pass_port_hocmai_ssl_conf: 9000
+
+### PHP
+
+upload_max_filesize: 800M
+post_max_size: 800M
+session.cookie_lifetime: 2000000
+session.gc_maxlifetime: 200000
+session.cache_expire: 200000
+

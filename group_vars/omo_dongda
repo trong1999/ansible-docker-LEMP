@@ -1,0 +1,72 @@
+---
+
+version_docker_compose: 3
+php_docker_file: docker/php.dockerfile
+php_name_service: php
+php_user: -www-data
+php_group: -www-data
+php_container_name: php-hm
+php_image_name: php-hm
+
+nginx_name_service: nginx
+nginx_docker_file: docker/nginx.dockerfile
+nginx_user: -www-data
+nginx_group: -www-data
+nginx_container_name: nginx-hm
+nginx_image_name: nginx-hm
+nginx_http_port_host: 80
+nginx_http_port_container: 80
+nginx_https_port_host: 443
+nginx_https_port_container: 443
+
+dbmysql_name_service: dbmysql
+dbmysql_container_name: db-hm
+dbmysql_image_name: mysql:5.7
+dbmysql_database: omo_hocmai
+dbmysql_passwd_root: omo_hocmai
+dbmysql_passwd: yUtbGFTq5u(7Aykp
+dbmysql_user: omo_hocmai
+
+phpmyadmin_name_service: phpmyadmin
+phpmyadmin_image_name: phpmyadmin/phpmyadmin
+phpmyadmin_container_name: phpma-hm
+phpmyadmin_user: root
+phpmyadmin_passwd: omo_hocmai
+phpmyadmin_passwd_root: omo_hocmai
+
+dbmysql_port_host: 3307
+dbmysql_port_container: 3306
+phpmyadmin_http_port_host: 82
+phpmyadmin_http_port_container: 80
+network_name: hocmai-network
+network_driver: bridge
+
+required_packages_ubuntu:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  - python3-pip
+  - virtualenv
+  - python3-setuptools
+
+required_packages_centos:
+  - yum-utils
+  - device-mapper-persistent-data
+  - lvm2
+
+docker_apt_key: 'https://download.docker.com/linux/ubuntu/gpg'
+
+docker_repo_ubuntu: 'deb https://download.docker.com/linux/ubuntu bionic stable'
+docker_repo_centos: 'https://download.docker.com/linux/centos/docker-ce.repo'
+
+dest_docker_repo_centos: '/etc/yum.repos.d/docker-ce.repo'
+
+docker_name_install: 
+  - docker-ce
+  - docker-compose
+
+docker_name_pip: 
+  - docker
+  - docker-compose
+

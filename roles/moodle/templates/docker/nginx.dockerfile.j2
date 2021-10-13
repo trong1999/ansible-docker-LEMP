@@ -1,0 +1,18 @@
+FROM {{ nginx_based_from }}
+
+LABEL maintainer="{{ nginx_label_maintainer }}"
+
+ARG NGINXGROUP
+ARG NGINXUSER
+
+ENV NGINXGROUP=${NGINXGROUP}
+ENV NGINXUSER=${NGINXUSER}
+
+RUN sed -i "s/user {{ nginx_user_in_docker_file }}/user ${NGINXUSER}/g" /etc/nginx/nginx.conf
+
+RUN mkdir -p {{ nginx_web_root }}
+
+RUN adduser -g ${NGINXGROUP} -s /bin/sh -D ${NGINXUSER}; exit 0
+COPY ./scripts/entrypoint.sh /etc/entrypoint.sh
+RUN chmod +x /etc/entrypoint.sh
+ENTRYPOINT ["/etc/entrypoint.sh"]

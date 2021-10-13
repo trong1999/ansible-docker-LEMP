@@ -1,0 +1,42 @@
+FROM {{ php_based_from }}
+
+LABEL maintainer="{{ php_label_maintainer }}"
+
+ARG PHPGROUP
+ARG PHPUSER
+
+ENV PHPGROUP=${PHPGROUP}
+ENV PHPUSER=${PHPUSER}
+
+RUN adduser -g ${PHPGROUP} -s /bin/sh -D ${PHPUSER}; exit 0
+
+RUN mkdir -p {{ php_web_root }}
+
+WORKDIR {{ php_workdir }}
+
+# Set the time zone
+RUN echo "Asia/Ho_Chi_Minh" > /etc/timezone
+
+RUN sed -i "s/user = {{ php_user_in_docker_file }}/user = ${PHPUSER}/g" /usr/local/etc/php-fpm.d/www.conf
+RUN sed -i "s/group = {{ php_group_in_docker_file }}/group = ${PHPGROUP}/g" /usr/local/etc/php-fpm.d/www.conf
+
+RUN apk add --no-cache \
+    apk add --update \
+    {{ php_install }} \
+    && docker-php-ext-install -j$(nproc) {{ php_ext_install_nproc }} \
+    && docker-php-ext-install {{ php_ext_install }} \
+    && docker-php-ext-enable {{ php_ext_enable }} \
+    {% if "gd" in php_ext_install %}
+    && docker-php-ext-configure gd --with-jpeg --with-freetype \
+    {% endif %}
+    && rm -rf /tmp/*
+
+# cron & supervisor
+COPY ./scripts/hocmai-crontab /var/spool/cron/crontabs/
+COPY ./scripts/worker.conf /etc/supervisor/conf.d/worker.conf
+RUN cat /var/spool/cron/crontabs/hocmai-crontab >> /var/spool/cron/crontabs/root
+
+ENV TZ=Asia/Ho_Chi_Minh
+RUN cp /usr/share/zoneinfo/$TZ /etc/localtime
+
+CMD supervisord -c /etc/supervisor/conf.d/worker.conf

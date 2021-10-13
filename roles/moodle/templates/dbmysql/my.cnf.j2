@@ -1,0 +1,8 @@
+[mysqld]
+explicit_defaults_for_timestamp = 1
+join_buffer_size                = {{ join_buffer_size }}
+innodb_file_per_table           = 1
+#bind-address=127.0.0.1
+max_allowed_packet              = {{ max_allowed_packet }}
+open_files_limit                = {{ open_files_limit }}
+max_connections                 = {{ max_connections }}

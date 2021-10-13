@@ -1,0 +1,14 @@
+---
+- include: "centos.yml"
+  when: ansible_os_family == "RedHat"
+
+- include: "ubuntu.yml"
+  when: ansible_os_family == "Debian"
+
+- name: makesure restart ssh
+  service: name=sshd state=restarted
+  when: ansible_os_family == "RedHat"
+
+- name: makesure restart ssh
+  service: name=ssh state=restarted
+  when: ansible_os_family == "Debian"

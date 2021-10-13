@@ -1,0 +1,35 @@
+server {
+    listen       {{ http_port_hocmai_conf }};
+    server_name  {{ server_name_hocmai_conf }};
+
+    root {{ folder_root_hocmai_conf }};
+
+    error_log  {{ error_logs_hocmai_conf }};
+    access_log {{ access_logs_hocmai_conf }} main;
+
+    location ~ (/vendor/|/node_modules/|composer\.json|/readme|/README|readme\.txt|/upgrade\.txt|db/install\.xml|/fixtures/|/behat/|phpunit\.xml|\.lock|environment\.xml) {
+        deny all;
+        return 404;
+    }
+
+    location / {
+        index  index.php index.html index.htm;
+    }
+
+    location ~ ^(.+\.php)(.*)$ {
+        fastcgi_split_path_info  ^(.+\.php)(.*)$;
+        fastcgi_index            index.php;
+        fastcgi_pass             {{ fastcgi_pass_hocmai_conf }}:{{ fastcgi_pass_port_hocmai_conf }};
+        include                  mime.types;
+        include                  fastcgi_params;
+        fastcgi_param   PATH_INFO       $fastcgi_path_info;
+        fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   html;
+    }
+}

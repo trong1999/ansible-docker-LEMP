@@ -1,0 +1,14 @@
+[supervisord]
+nodaemon=true
+logfile=/var/log/jobschedule/supervisord.log
+pidfile=/var/log/jobschedule/supervisord.pid
+
+[program:php-fmp]
+command = /usr/local/bin/docker-php-entrypoint php-fpm -D
+autostart = true
+
+[program:crond]
+command = /usr/sbin/crond
+user = root
+autostart = true
+stdout_logfile=/var/log/jobschedule/cron.log

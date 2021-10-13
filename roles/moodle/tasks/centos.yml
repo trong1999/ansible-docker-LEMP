@@ -1,0 +1,99 @@
+---
+
+- name: Install required system packages
+  apt:
+    name: "{{ required_packages_centos }}"
+    state: latest
+    update_cache: yes
+
+- name: Add docker repository
+  get_url:
+    url: "{{ docker_repo_centos }}"
+    dest: "{{ dest_docker_repo_centos }}"
+
+- name: Update apt and install docker-ce and install docker-compose
+  yum:
+    update_cache: yes
+    name: "{{ docker_name_install }}"
+    state: latest
+  notify: Restart docker
+
+- name: Create directory "{{ main_dir }}"
+  file:
+     path: $HOME/{{ main_dir }}
+     state: directory
+     recurse: yes
+     mode: '0755'
+     owner: root
+     group: root
+
+- name: Create directory "{{ main_dir }}/{{ item }}"
+  file:
+     path: '$HOME/{{ main_dir }}/{{ item }}'
+     state: directory
+     recurse: yes
+     mode: '0755'
+     owner: root
+     group: root
+  loop:
+    - dbmysql
+    - docker
+    - docker/nginx
+    - docker/php
+    - docker/nginx/conf.d
+    - logs
+    - scripts
+    - src
+
+- name: Copy resource in files dir
+  copy:
+    src: "{{ item }}/"
+    dest: '$HOME/{{ main_dir }}/{{ item }}'
+    remote_src: false
+    force: yes
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - dbmysql
+      #    - { src: 'src', dest: 'src' }
+
+- name: Copy resource '{{ item }}' in templates dir
+  template:
+    src: '{{ item.src }}'
+    dest: '$HOME/{{ main_dir }}/{{ item.dest }}/'
+    owner: root
+    group: root
+    mode: '755'
+  loop:
+    - { src: 'dbmysql/my.cnf.j2', dest: 'dbmysql' }
+    - { src: 'docker/nginx.dockerfile.j2', dest: 'docker' }
+    - { src: 'docker/php.dockerfile.j2', dest: 'docker' }
+    - { src: 'docker/nginx/nginx.conf.j2', dest: 'docker/nginx' }
+    - { src: 'docker/nginx/conf.d/hocmai.conf.j2', dest: 'docker/nginx/conf.d' }
+    - { src: 'docker/nginx/conf.d/hocmai_redirect.conf.j2', dest: 'docker/nginx/conf.d' }
+    - { src: 'docker/nginx/conf.d/hocmai_ssl.conf.j2', dest: 'docker/nginx/conf.d' }
+    - { src: 'docker/php/local.ini.j2', dest: 'docker/php' }
+    - { src: 'docker/php/php.ini.j2', dest: 'docker/php' }
+    - { src: 'docker/php/www.conf.j2', dest: 'docker/php' }
+    - { src: 'scripts/db_backup.sh.j2', dest: 'scripts' }
+    - { src: 'scripts/hocmai-crontab.j2', dest: 'scripts' }
+    - { src: 'scripts/worker.conf.j2', dest: 'scripts' }
+  tags:
+    - cpy
+
+
+- name: Copy docker-compose file
+  template:
+    src: 'docker-compose.yml.j2'
+    dest: '$HOME/{{ main_dir }}/docker-compose.yml'
+  tags:
+    - docker-compose
+
+- name: Deploy docker-compose
+  become: True
+  shell: 
+    cmd: 'docker-compose up -d'
+    chdir: '$HOME/{{ main_dir }}'
+  tags:
+    - run-compose
